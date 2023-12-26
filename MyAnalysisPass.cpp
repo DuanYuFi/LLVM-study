@@ -16,11 +16,11 @@
 using namespace llvm;
 
 namespace {
-  struct MyAnalysisPass : public ModulePass {
+  struct MyAnalysisPass : public FunctionPass {
     static char ID;
-    MyAnalysisPass() : ModulePass(ID) {}
+    MyAnalysisPass() : FunctionPass(ID) {}
 
-    bool runOnModule(Module &M) override {
+    bool runOnFunction(Function &M) override {
       errs() << "Analyzing function: " << M.getName() << '\n';
       // 这里添加你的分析逻辑
       return true;
