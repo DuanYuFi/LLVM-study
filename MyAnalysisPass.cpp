@@ -16,39 +16,29 @@
 using namespace llvm;
 
 namespace {
-  struct MyAnalysisPass : public FunctionPass {
+  struct MyAnalysisPass : public ModulePass {
     static char ID;
-    MyAnalysisPass() : FunctionPass(ID) {}
+    MyAnalysisPass() : ModulePass(ID) {}
 
-    bool runOnFunction(Function &F) override {
-      errs() << "Analyzing function: " << F.getName() << '\n';
+    bool runOnModule(Module &M) override {
+      errs() << "Analyzing function: " << M.getName() << '\n';
       // 这里添加你的分析逻辑
-      return false;
+      return true;
     }
   };
 }
 
-// char MyAnalysisPass::ID = 0;
-// static MyAnalysisPass l0_register_std_pass(
-//     PassManagerBuilder::EP_EnabledOnOptLevel0,
-//     [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
-//       PM.add(new MyAnalysisPass());
-//     });
-
-extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
-llvmGetPassPluginInfo() {
-  return {
-    LLVM_PLUGIN_API_VERSION, "MyAnalysisPass", LLVM_VERSION_STRING,
-    [](PassBuilder &PB) {
-      PB.registerPipelineParsingCallback(
-        [](StringRef Name, FunctionPassManager &FPM, ArrayRef<PassBuilder::PipelineElement>) {
-          if (Name == "myanalysis") {
-            FPM.addPass(MyAnalysisPass());
-            return true;
-          }
-          return false;
-        }
-      );
+char MyAnalysisPass::ID = 0;
+static RegisterStandardPasses l0_register_std_pass(
+    PassManagerBuilder::EP_EnabledOnOptLevel0,
+    [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
+        PM.add(new MyAnalysisPass());
     }
-  };
-}
+);
+
+static RegisterStandardPasses moe_register_std_pass(
+    PassManagerBuilder::EP_ModuleOptimizerEarly,
+    [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
+        PM.add(new MyAnalysisPass());
+    }
+);
