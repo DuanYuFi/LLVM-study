@@ -16,6 +16,8 @@ namespace {
     static char ID;
     DoubleFreeDetectionPass() : FunctionPass(ID) {}
 
+    Value* constTaintTag = nullptr;
+
     std::set<Value*> taintedVariables;
 
     std::map<Value*, Value*> disjointSet;
@@ -35,12 +37,12 @@ namespace {
 
     // Check if a variable is already tainted
     bool isTainted(Value *V) {
-      return find(V) == find(nullptr);
+      return find(V) == find(constTaintTag);
     }
 
     // Mark a variable as tainted
     void setTaint(Value *V) {
-      jointValue(nullptr, V);
+      jointValue(constTaintTag, V);
     }
 
     void jointValue(Value *Vfather, Value *Vson) {
