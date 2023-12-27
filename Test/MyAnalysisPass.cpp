@@ -39,9 +39,9 @@ namespace {
     bool runOnFunction(Function &F) override {
       errs() << "Analyzing function: " << demangle(F.getName()) << '\n';
       // 这里添加你的分析逻辑
-      // for (auto& arg: F.args()) {
-      //   errs() << "arg: " << arg << '\n';
-      // }
+      for (auto& arg: F.args()) {
+        errs() << "arg: " << arg << '\n';
+      }
       return true;
     }
   };
@@ -70,7 +70,7 @@ static RegisterStandardPasses l0_register_std_pass(
     PassManagerBuilder::EP_EnabledOnOptLevel0,
     [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
         PM.add(new MyAnalysisPass());
-        PM.add(new ModuleAnalysis());
+        // PM.add(new ModuleAnalysis());
     }
 );
 
@@ -78,6 +78,6 @@ static RegisterStandardPasses moe_register_std_pass(
     PassManagerBuilder::EP_ModuleOptimizerEarly,
     [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
         PM.add(new MyAnalysisPass());
-        PM.add(new ModuleAnalysis());
+        // PM.add(new ModuleAnalysis());
     }
 );
