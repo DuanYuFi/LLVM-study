@@ -1,0 +1,7 @@
+[ 50%] Building CXX object CMakeFiles/DoubleFreePass.dir/DoubleFreePass.cpp.o
+[100%] Linking CXX shared module libDoubleFreePass.so
+[100%] Built target DoubleFreePass
+In function __cxx_global_var_init
+In function main
+Warning: Potential double-free detected
+In function _GLOBAL__sub_I_test.cpp
