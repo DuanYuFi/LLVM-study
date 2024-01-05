@@ -12,9 +12,9 @@
 using namespace llvm;
 
 namespace {
-  struct DoubleFreeDetectionPass : public FunctionPass {
+  struct MemoryLeakPass : public FunctionPass {
     static char ID;
-    DoubleFreeDetectionPass() : FunctionPass(ID) {}
+    MemoryLeakPass() : FunctionPass(ID) {}
 
     Value* constTaintTag = nullptr;
 
@@ -40,6 +40,10 @@ namespace {
       return find(V) == find(constTaintTag);
     }
 
+    bool connected(Value *v1, Value *v2) {
+      return find(v1) == find(v2);
+    }
+
     // Mark a variable as tainted
     void setTaint(Value *V) {
       jointValue(constTaintTag, V);
@@ -56,20 +60,33 @@ namespace {
       disjointSet[rootS] = find(rootF);
     }
 
+    void removeTaint(Value* V) {
+      ;
+    }
+
     bool runOnFunction(Function &F) override {
+
       errs() << "In function " << F.getName() << '\n';
+
       for (auto &BB : F) {
         for (auto &I : BB) {
+          // errs() << I << '\n';
           if (auto *callInst = dyn_cast<CallInst>(&I)) {
+            
             if (Function *calledFunction = callInst->getCalledFunction()) {
-               if (calledFunction->getName() == "free") {
-                Value *arg = callInst->getArgOperand(0); // Get the argument passed to free
-
-                if (isTainted(arg)) {
-                  errs() << "Warning: Potential double-free detected\n";
-                } else {
-                  setTaint(arg);
-                }
+              // Handle malloc
+              if (calledFunction->getName() == "malloc") {
+                taintedVariables.insert(&I);
+              }
+              // Handle free
+              else if (calledFunction->getName() == "free") {
+                Value *arg = callInst->getArgOperand(0);
+                // if (isTainted(arg)) {
+                //   removeTaint(arg);
+                // } else {
+                //   errs() << "Error: Freeing uninitialized memory\n";
+                // }
+                jointValue(arg, nullptr);
               }
             }
           }
@@ -98,23 +115,30 @@ namespace {
         }
       }
 
+      // Check for memory leaks
+      for (auto *V : taintedVariables) {
+        if (!connected(V, nullptr)) {
+          errs() << "Warning: memory leak " << *V << '\n';
+        }
+      }
+
       return false;
     }
   };
 }
 
-char DoubleFreeDetectionPass::ID = 0;
+char MemoryLeakPass::ID = 0;
 
 static RegisterStandardPasses l0_register_std_pass(
     PassManagerBuilder::EP_EnabledOnOptLevel0,
     [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
-        PM.add(new DoubleFreeDetectionPass());
+        PM.add(new MemoryLeakPass());
     }
 );
 
 static RegisterStandardPasses moe_register_std_pass(
     PassManagerBuilder::EP_ModuleOptimizerEarly,
     [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
-        PM.add(new DoubleFreeDetectionPass());
+        PM.add(new MemoryLeakPass());
     }
 );

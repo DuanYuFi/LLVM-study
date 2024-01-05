@@ -10,13 +10,9 @@ int main() {
 
     int a = 1;
 
-    char* ch2 = ch;
+    char* ch2 = (char*) malloc(16);
 
     free(ch);
-
-    if (a < 10) {
-        free(ch2);
-    }
 
     return 0;
 }
